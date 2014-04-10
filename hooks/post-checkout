@@ -4,6 +4,5 @@ old_ref=$1
 new_ref=$2
 
 if [ $checking_out_branch -eq 1 ] && b=$(git symbolic-ref --short -q HEAD); then
-    pwd
-    git_rails.sh $old_ref $new_ref
+    git_rails $old_ref $new_ref
 fi

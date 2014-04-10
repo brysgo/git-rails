@@ -38,7 +38,7 @@ if [ ! -z "$migrations_removed" ]; then
   git checkout $new_ref -- db/schema.rb
 fi
 
-if [ ! -z "$old_ref" ]; then
+if [ ! -z "$migrations_added" ]; then
   echo "New migrations have been added running migrations"
   bundle exec rake db:migrate db:test:prepare
   git checkout $new_ref -- db/schema.rb
