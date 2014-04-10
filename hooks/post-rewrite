@@ -1,0 +1,8 @@
+#!/bin/bash
+command_used=$1
+
+if [ $command_used == 'rebase' ]; then
+  old_ref=`git rev-parse ORIG_HEAD`
+  new_ref=`git rev-parse HEAD`
+  git_rails $old_ref $new_ref
+fi

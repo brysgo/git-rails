@@ -1,0 +1,51 @@
+#!/bin/bash
+old_ref=$1
+new_ref=$2
+
+if [ -z "$old_ref" ]; then
+  old_ref=`git rev-parse ORIG_HEAD`
+fi
+
+if [ -z "$new_ref" ]; then
+  new_ref=`git rev-parse HEAD`
+fi
+
+files_changed=`git diff $old_ref $new_ref --name-status`
+migrations_removed=`echo "$files_changed" | egrep 'D\tdb/migrate/([0-9]+)' | sort -r`
+migrations_added=`echo "$files_changed" | egrep 'A\tdb/migrate/([0-9]+)'`
+
+# CHECK IF WE NEED TO DO A BUNDLE
+bundle_changed=`echo "$files_changed" | egrep 'M\tGemfile.lock'` 
+if [ ! -z "$bundle_changed" ]; then
+  echo "Your Gemfile.lock has changed, running bundle"
+  bundle
+fi
+
+if [ ! -z "$migrations_removed" ]; then
+  echo "Rolling back missing migrations"
+  for migration in $migrations_removed
+  do
+    if [ $migration == "D" ]; then
+      continue
+    fi
+    git checkout "$old_ref" -- "$migration"
+    version=`echo "$migration" | cut -d'_' -f1 | cut -d'/' -f3`
+    bundle exec rake db:migrate:down VERSION="$version"
+    git reset
+    rm "$migration"
+  done
+  bundle exec rake db:test:prepare
+  git checkout $new_ref -- db/schema.rb
+fi
+
+if [ ! -z "$old_ref" ]; then
+  echo "New migrations have been added running migrations"
+  bundle exec rake db:migrate db:test:prepare
+  git checkout $new_ref -- db/schema.rb
+fi
+
+# CHECK IF ENVIRONMENT HAS CHANGED
+env_erb_changed=`echo "$files_changed" | egrep 'M\t(.env.erb|bin/setup)'` 
+if [ ! -z "$env_erb_changed" ]; then
+  echo 'Environment stuff has changed, you should run ./bin/setup!!'
+fi
