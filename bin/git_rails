@@ -43,9 +43,3 @@ if [ ! -z "$old_ref" ]; then
   bundle exec rake db:migrate db:test:prepare
   git checkout $new_ref -- db/schema.rb
 fi
-
-# CHECK IF ENVIRONMENT HAS CHANGED
-env_erb_changed=`echo "$files_changed" | egrep 'M\t(.env.erb|bin/setup)'` 
-if [ ! -z "$env_erb_changed" ]; then
-  echo 'Environment stuff has changed, you should run ./bin/setup!!'
-fi
