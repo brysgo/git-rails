@@ -30,12 +30,13 @@ if [ ! -z "$migrations_removed" ]; then
     fi
     git checkout "$old_ref" -- "$migration"
     version=`echo "$migration" | cut -d'_' -f1 | cut -d'/' -f3`
-    bundle exec rake db:migrate:down VERSION="$version"
-    git reset
-    rm "$migration"
+    migrate_commands="$migrate_commandsActiveRecord::Migrator.run(:down, 'db/migrate', $version) rescue nil"
   done
+  echo "$migrate_commands" | bundle exec rails c
   bundle exec rake db:test:prepare
   git checkout $new_ref -- db/schema.rb
+  git reset HEAD -- db/migrate
+  git clean -df db/migrate
 fi
 
 if [ ! -z "$migrations_added" ]; then
