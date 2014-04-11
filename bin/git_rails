@@ -11,8 +11,6 @@ if [ -z "$new_ref" ]; then
 fi
 
 files_changed=`git diff $old_ref $new_ref --name-status`
-migrations_removed=`echo "$files_changed" | egrep 'D\tdb/migrate/([0-9]+)' | sort -r`
-migrations_added=`echo "$files_changed" | egrep 'A\tdb/migrate/([0-9]+)'`
 
 # CHECK IF WE NEED TO DO A BUNDLE
 bundle_changed=`echo "$files_changed" | egrep 'M\tGemfile.lock'` 
@@ -21,26 +19,42 @@ if [ ! -z "$bundle_changed" ]; then
   bundle
 fi
 
-if [ ! -z "$migrations_removed" ]; then
-  echo "Rolling back missing migrations"
-  for migration in $migrations_removed
+migrations=`git diff --name-status $old_ref $new_ref -- db/migrate`
+if [ ! -z "$migrations" ]; then
+  echo "Running migrations!"
+  for migration in $migrations
   do
+    # CHECK THE MIGRATION TYPE AND CONTINUE TO THE FILENAME
     if [ $migration == "D" ]; then
+      migration_type="down"
+      continue
+    elif [ $migration == "A" ]; then
+      migration_type="up"
       continue
     fi
-    git checkout "$old_ref" -- "$migration"
-    version=`echo "$migration" | cut -d'_' -f1 | cut -d'/' -f3`
-    migrate_commands="$migrate_commandsActiveRecord::Migrator.run(:down, 'db/migrate', $version) rescue nil"
-  done
-  echo "$migrate_commands" | bundle exec rails c
-  bundle exec rake db:test:prepare
-  git checkout $new_ref -- db/schema.rb
-  git reset HEAD -- db/migrate
-  git clean -df db/migrate
-fi
 
-if [ ! -z "$migrations_added" ]; then
-  echo "New migrations have been added running migrations"
-  bundle exec rake db:migrate db:test:prepare
-  git checkout $new_ref -- db/schema.rb
+    # BUILD THE MIGRATION COMMAND FROM THE VERSION AND TYPE
+    version=`echo "$migration" | cut -d'_' -f1 | cut -d'/' -f3`
+    migrate_command="ActiveRecord::Migrator.run(:$migration_type, 'db/migrate', $version) rescue nil"
+
+    # APPEND OR PREPREND TO THE COMMAND LIST DEPENDING ON MIGRATION TYPE
+    if [[ $migration_type == "down" ]]; then
+      # CHECKOUT DOWN MIGRATION AND SAVE PATH FOR CLEANUP
+      git checkout "$old_ref" -- "$migration"
+      migration_cleanup="$migration_cleanup $migration"
+      migrate_commands="$migrate_command$migrate_commands"
+    else
+      migrate_commands="$migrate_commands$migrate_command"
+    fi
+  done
+
+  # RUN THE MIGRATIONS (AND TEST PREPARE)
+  echo "$migrate_commands" | bundle exec rails c > /dev/null
+  bundle exec rake db:test:prepare > /dev/null
+
+  # CLEAN UP DOWN MIGRATIONS
+  if [ ! -z "$migration_cleanup" ]; then
+    git reset $new_ref -- $migration_cleanup
+    rm $migration_cleanup
+  fi
 fi
