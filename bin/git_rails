@@ -49,8 +49,8 @@ if [ ! -z "$migrations" ]; then
   done
 
   # RUN THE MIGRATIONS (AND TEST PREPARE)
+  migrate_commands="$migrate_commandsRake::Task['db:test:prepare'].invoke"
   echo "$migrate_commands" | bundle exec rails c > /dev/null
-  bundle exec rake db:test:prepare > /dev/null
 
   # CLEAN UP DOWN MIGRATIONS
   if [ ! -z "$migration_cleanup" ]; then
