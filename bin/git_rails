@@ -13,7 +13,7 @@ fi
 files_changed=`git diff $old_ref $new_ref --name-status`
 
 # CHECK IF WE NEED TO DO A BUNDLE
-bundle_changed=`echo "$files_changed" | egrep 'M\tGemfile.lock'` 
+bundle_changed=`echo "$files_changed" | egrep 'M\tGemfile.lock'`
 if [ ! -z "$bundle_changed" ]; then
   echo "Your Gemfile.lock has changed, running bundle"
   bundle
@@ -42,9 +42,9 @@ if [ ! -z "$migrations" ]; then
       # CHECKOUT DOWN MIGRATION AND SAVE PATH FOR CLEANUP
       git checkout "$old_ref" -- "$migration"
       migration_cleanup="$migration_cleanup $migration"
-      migrate_commands="$migrate_command$migrate_commands"
+      migrate_commands="$migrate_command;$migrate_commands"
     else
-      migrate_commands="$migrate_commands$migrate_command"
+      migrate_commands="$migrate_commands;$migrate_command"
     fi
   done
 
