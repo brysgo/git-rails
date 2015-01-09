@@ -19,7 +19,7 @@ if [ ! -z "$bundle_changed" ]; then
   bundle
 fi
 
-migrations=`git diff --name-status $old_ref $new_ref -- db/migrate`
+migrations=`git diff --name-status $old_ref $new_ref -- "db/migrate*"`
 if [ ! -z "$migrations" ]; then
   echo "Running migrations!"
   for migration in $migrations
@@ -34,8 +34,9 @@ if [ ! -z "$migrations" ]; then
     fi
 
     # BUILD THE MIGRATION COMMAND FROM THE VERSION AND TYPE
-    version=`echo "$migration" | cut -d'_' -f1 | cut -d'/' -f3`
-    migrate_command="ActiveRecord::Migrator.run(:$migration_type, 'db/migrate', $version) rescue nil"
+    version=`echo "$migration" | cut -d'/' -f3| cut -d'_' -f1`
+    migration_directory=`echo "$migration" | cut -d'/' -f2`
+    migrate_command="ActiveRecord::Migrator.run(:$migration_type, 'db/$migration_directory', $version) rescue nil"
 
     # APPEND OR PREPREND TO THE COMMAND LIST DEPENDING ON MIGRATION TYPE
     if [[ $migration_type == "down" ]]; then
