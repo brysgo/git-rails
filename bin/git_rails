@@ -13,7 +13,7 @@ fi
 files_changed=`git diff $old_ref $new_ref --name-status`
 
 # CHECK IF WE NEED TO DO A BUNDLE
-bundle_changed=`echo "$files_changed" | egrep 'M\tGemfile.lock'`
+bundle_changed=`echo "$files_changed" | grep $'M\tGemfile.lock'`
 if [ ! -z "$bundle_changed" ]; then
   echo "Your Gemfile.lock has changed, running bundle"
   bundle
