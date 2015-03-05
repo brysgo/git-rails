@@ -49,7 +49,7 @@ if [ ! -z "$migrations" ]; then
   done
 
   # RUN THE MIGRATIONS (AND TEST PREPARE)
-  echo "$migrate_commands" | bundle exec rails c > /dev/null
+  echo "$migrate_commands" | bundle exec rails c
 
   # CLEAN UP DOWN MIGRATIONS
   if [ ! -z "$migration_cleanup" ]; then
