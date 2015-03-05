@@ -19,7 +19,7 @@ if [ ! -z "$bundle_changed" ]; then
   bundle
 fi
 
-migrations=`git diff --name-status $old_ref $new_ref -- db/migrate`
+migrations=`git diff --name-status $old_ref $new_ref -- db/migrate | grep '^[AD]'`
 if [ ! -z "$migrations" ]; then
   echo "Running migrations!"
   for migration in $migrations
