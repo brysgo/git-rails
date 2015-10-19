@@ -48,6 +48,10 @@ if [ ! -z "$migrations" ]; then
     fi
   done
 
+  # DUMP UPDATED DB SCHEMA AFTER MIGRATIONS HAVE RUN
+  db_dump_command="require 'rake';Rails.application.load_tasks;Rake::Task['db:_dump'].invoke"
+  migrate_commands="$migrate_commands;$db_dump_command"
+
   # RUN THE MIGRATIONS (AND TEST PREPARE)
   echo "$migrate_commands" | bundle exec rails c > /dev/null
 
