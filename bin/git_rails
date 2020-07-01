@@ -7,7 +7,7 @@ function help {
   echo "Flags:"
   echo -e "\t-d\tdry-run: display pending changes and exit"
   echo -e "\t-v\tverbose: display pending changes, prompt to continue, display command output"
-  echo -e "\t-y\tauto-confirm: in verbose mode, do not prompt after displaying pending changes"
+  echo -e "\t-y\tauto-confirm: in verbose mode, apply pending changes without prompting"
   echo
   exit 0
 }

@@ -50,7 +50,7 @@ The following command line options are supported:
 * -v, --verbose
   * Display pending changes, prompt to continue, display command output
 * -y, --auto_confirm
-  * Variant of verbose mode; display pending changes but do not prompt before applying them
+  * Use in conjunction with verbose mode to apply pending changes without prompting
 * -d, --dry_run
   * Display pending changes and exit
 * -h, --help
