@@ -43,6 +43,19 @@ Or if you really know what you are doing and you want to pretend like you are on
 
 Migrations that were added between `REF_YOU_CAME_FROM` and `REF_YOU_ARE_GOING_TO` that do not exist on your current `HEAD` will not be applied because they don't exist!!
 
+#### Options
+
+The following command line options are supported:
+
+* -v, --verbose
+  * Display pending changes, prompt to continue, display command output
+* -y, --auto_confirm
+  * Variant of verbose mode; display pending changes but do not prompt before applying them
+* -d, --dry_run
+  * Display pending changes and exit
+* -h, --help
+  * Display usage and exit
+
 #### Hooks
 
 You shouldn't have to think about the hooks once they are installed. Just pull, checkout, and rebase as normal and they should work fine. If you find that `git_rails` hasn't fired when it should follow the command instructions to run it manually.

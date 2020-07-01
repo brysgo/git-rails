@@ -1,4 +1,65 @@
 #!/bin/bash
+
+function help {
+  echo -e "\nUsage:"
+  echo -e "\tgit-rails [-d] [-v] [-y] [old_ref] [new_ref]"
+  echo -e "\tgit-rails -h"
+  echo "Flags:"
+  echo -e "\t-d\tdry-run: display pending changes and exit"
+  echo -e "\t-v\tverbose: display pending changes, prompt to continue, display command output"
+  echo -e "\t-y\tauto-confirm: in verbose mode, do not prompt after displaying pending changes"
+  echo
+  exit 0
+}
+
+dry_run=0
+verbose=0
+confirm=0
+out_target="/dev/null"
+
+optspec=":vdyh-:"
+while getopts "$optspec" optchar; do
+  case "${optchar}" in
+    -)
+      case "${OPTARG}" in
+        dry-run | dry_run)
+          dry_run=1
+          verbose=1
+          ;;
+        verbose)
+          verbose=1
+          confirm=1
+          out_target="/dev/stdout"
+          ;;
+        auto-confirm | auto_confirm)
+          confirm_opt=0
+          ;;
+        help)
+          help
+          ;;
+      esac;;
+    d)
+      dry_run=1
+      verbose=1
+      ;;
+    v)
+      verbose=1
+      confirm=1
+      out_target="/dev/stdout"
+      ;;
+    y)
+      confirm_opt=0
+      ;;
+    h)
+      help
+      ;;
+  esac
+done
+if [ "$verbose" -eq 1 -a ! -z "$confirm_opt" ]; then
+  confirm=$confirm_opt
+fi
+shift $((OPTIND -1))
+
 old_ref=$1
 new_ref=$2
 
@@ -14,12 +75,36 @@ files_changed=`git diff $old_ref $new_ref --name-status`
 
 # CHECK IF WE NEED TO DO A BUNDLE
 bundle_changed=`echo "$files_changed" | grep $'M\tGemfile.lock'`
+
+migrations=`git diff --name-status $old_ref $new_ref -- db/migrate | grep '^[AD]'`
+
+if [ "$verbose" -eq 1 ]; then
+  if [ ! -z "$bundle_changed" ]; then
+    echo -e "\nPrep needed:"
+    echo -e "\t- bundle"
+  fi
+  if [ ! -z "$migrations" ]; then
+    echo -e "\nMigrations needed:\n${migrations}"
+  fi
+  if [ -z "$bundle_changed" -a -z "$migrations" ]; then
+    echo -e "\nNo changes necessary\n"
+    exit 0
+  fi
+  echo
+  if [ "$dry_run" -eq 1 ]; then
+    exit 0
+  elif [ "$confirm" -eq 1 ]; then
+    read -p "Continue? [Yn]: " confirm
+    [[ $confirm =~ ^[Nn] ]] && echo && exit 0
+  fi
+fi
+
+# okay, now actually run whatever's needed
 if [ ! -z "$bundle_changed" ]; then
   echo "Your Gemfile.lock has changed, running bundle"
   bundle
 fi
 
-migrations=`git diff --name-status $old_ref $new_ref -- db/migrate | grep '^[AD]'`
 if [ ! -z "$migrations" ]; then
   echo "Running migrations!"
   for migration in $migrations
@@ -49,7 +134,9 @@ if [ ! -z "$migrations" ]; then
   done
 
   # RUN THE MIGRATIONS (AND TEST PREPARE)
-  echo "$migrate_commands" | bundle exec rails c > /dev/null
+  {
+    echo "$migrate_commands" | bundle exec rails c
+  } > $out_target
 
   # CLEAN UP DOWN MIGRATIONS
   if [ ! -z "$migration_cleanup" ]; then
