@@ -2,12 +2,19 @@
 
 function help {
   echo -e "\nUsage:"
-  echo -e "\tgit-rails [-d] [-v] [-y] [old_ref] [new_ref]"
+  echo -e "\tgit-rails [-d] [-v] [-y] [src_ref] [dest_ref]"
   echo -e "\tgit-rails -h"
   echo "Flags:"
   echo -e "\t-d\tdry-run: display pending changes and exit"
   echo -e "\t-v\tverbose: display pending changes, prompt to continue, display command output"
   echo -e "\t-y\tauto-confirm: in verbose mode, apply pending changes without prompting"
+  echo
+  echo -e "\tsrc_ref\t\tBranch/ref you're coming from; defaults to ORIG_HEAD"
+  echo
+  echo -e "\tdest_ref\tBranch/ref you're ending at; defaults to HEAD"
+  echo -e "\t\t\tUse with care; see README for more details"
+  echo
+  echo -e "Web: https://github.com/jfouse/git-rails"
   echo
   exit 0
 }
