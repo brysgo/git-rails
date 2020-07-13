@@ -14,7 +14,7 @@ function help {
   echo -e "\tdest_ref\tBranch/ref you're ending at; defaults to HEAD"
   echo -e "\t\t\tUse with care; see README for more details"
   echo
-  echo -e "Web: https://github.com/jfouse/git-rails"
+  echo -e "Web: https://github.com/brysgo/git-rails"
   echo
   exit 0
 }
