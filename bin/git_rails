@@ -78,13 +78,11 @@ if [ -z "$new_ref" ]; then
   new_ref=`git rev-parse HEAD`
 fi
 
-files_changed=`git diff $old_ref $new_ref --name-status`
-
 # CHECK IF WE NEED TO DO A BUNDLE
-bundle_changed=`echo "$files_changed" | grep $'M\tGemfile.lock'`
+bundle_changed=`git diff $old_ref $new_ref -- Gemfile.lock`
 
 # CHECK IF WE NEED TO SPIN SOME YARN
-yarn_changed=`echo "$files_changed" | grep $'M\tyarn.lock'`
+yarn_changed=`git diff $old_ref $new_ref -- yarn.lock`
 
 migrations=`git diff --name-status $old_ref $new_ref -- db/migrate | grep '^[AD]'`
 
