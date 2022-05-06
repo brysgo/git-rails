@@ -61,3 +61,15 @@ The following command line options are supported:
 You shouldn't have to think about the hooks once they are installed. Just pull, checkout, and rebase as normal and they should work fine. If you find that `git_rails` hasn't fired when it should follow the command instructions to run it manually.
 
 Also, the hooks are optional, you can use `git_rails` without them!
+
+#### Monorepo usage
+
+If the Rails project is not in the root of the Git repository, execute `git_rails` and hooks in the Rails directory.
+
+For example, to make the post-checkout hook run in a particular subdirectory, create the following `.git/hooks/post-checkout` file:
+
+```sh
+#!/bin/sh
+cd path/to/rails/project
+exec /path/to/git_rails/hooks/post-checkout "$@"
+```
