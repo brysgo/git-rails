@@ -137,14 +137,14 @@ if [ ! -z "$migrations" ]; then
     fi
 
     # BUILD THE MIGRATION COMMAND FROM THE VERSION AND TYPE
-    version=`echo "$migration" | cut -d'_' -f1 | cut -d'/' -f3`
+    version=`echo "$migration" | grep -o 'db/migrate/.*' | cut -d'_' -f1 | cut -d'/' -f3`
     migrate_command="ActiveRecord::Migrator.run(:$migration_type, 'db/migrate', $version) rescue nil"
 
     # APPEND OR PREPREND TO THE COMMAND LIST DEPENDING ON MIGRATION TYPE
     if [[ $migration_type == "down" ]]; then
       # CHECKOUT DOWN MIGRATION AND SAVE PATH FOR CLEANUP
-      git checkout "$old_ref" -- "$migration"
-      migration_cleanup="$migration_cleanup $migration"
+      git checkout "$old_ref" -- ":/$migration"
+      migration_cleanup="$migration_cleanup $(git ls-files :/$migration)"
       migrate_commands="$migrate_command;$migrate_commands"
     else
       migrate_commands="$migrate_commands;$migrate_command"
