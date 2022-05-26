@@ -155,7 +155,7 @@ if [ ! -z "$migrations" ]; then
 
   # RUN THE MIGRATIONS (AND TEST PREPARE)
   {
-    echo "$migrate_commands" | bundle exec rails c
+    echo "$migrate_commands" | bundle exec rails runner /dev/stdin
   } > $out_target
 
   # CLEAN UP DOWN MIGRATIONS
