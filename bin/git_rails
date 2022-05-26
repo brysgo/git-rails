@@ -78,13 +78,11 @@ if [ -z "$new_ref" ]; then
   new_ref=`git rev-parse HEAD`
 fi
 
-files_changed=`git diff $old_ref $new_ref --name-status`
-
 # CHECK IF WE NEED TO DO A BUNDLE
-bundle_changed=`echo "$files_changed" | grep $'M\tGemfile.lock'`
+bundle_changed=`git diff $old_ref $new_ref -- Gemfile.lock`
 
 # CHECK IF WE NEED TO SPIN SOME YARN
-yarn_changed=`echo "$files_changed" | grep $'M\tyarn.lock'`
+yarn_changed=`git diff $old_ref $new_ref -- yarn.lock`
 
 migrations=`git diff --name-status $old_ref $new_ref -- db/migrate | grep '^[AD]'`
 
@@ -139,14 +137,14 @@ if [ ! -z "$migrations" ]; then
     fi
 
     # BUILD THE MIGRATION COMMAND FROM THE VERSION AND TYPE
-    version=`echo "$migration" | cut -d'_' -f1 | cut -d'/' -f3`
+    version=`echo "$migration" | grep -o 'db/migrate/.*' | cut -d'_' -f1 | cut -d'/' -f3`
     migrate_command="ActiveRecord::Migrator.run(:$migration_type, 'db/migrate', $version) rescue nil"
 
     # APPEND OR PREPREND TO THE COMMAND LIST DEPENDING ON MIGRATION TYPE
     if [[ $migration_type == "down" ]]; then
       # CHECKOUT DOWN MIGRATION AND SAVE PATH FOR CLEANUP
-      git checkout "$old_ref" -- "$migration"
-      migration_cleanup="$migration_cleanup $migration"
+      git checkout "$old_ref" -- ":/$migration"
+      migration_cleanup="$migration_cleanup $(git ls-files :/$migration)"
       migrate_commands="$migrate_command;$migrate_commands"
     else
       migrate_commands="$migrate_commands;$migrate_command"
